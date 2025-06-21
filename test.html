@@ -1,0 +1,526 @@
+1<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Profile Card</title>
+    <style>
+       :root {
+    /* Original Color Scheme Variables */
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --accent: #00ff88;
+    --accent-glow: #00ffaac4;
+    --text-primary: #ffffff;
+    --text-secondary: #b8b8d1;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    --bg-primary: #0f0f23;
+    --bg-secondary: #1a1a2e;
+    --card-bg: rgba(96, 73, 110, 0.55);
+    --card-bg-secondary: rgba(113, 196, 255, 0.27);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-bg-hover: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-bright: rgba(255, 255, 255, 0.4);
+    --shadow-light: rgba(0, 0, 0, 0.3);
+    --shadow-medium: rgba(0, 0, 0, 0.4);
+    --avatar-glow: rgba(102, 126, 234, 0.3);
+
+    /* Additional Color Scheme Variables */
+    --primary-blue: #1e88e5;
+    --secondary-blue: #0d47a1;
+    --primary-green: #26a69a;
+    --secondary-green: #00897b;
+    --primary-yellow: #ffd54f;
+    --secondary-yellow: #ffb300;
+    --light-blue: #e8f4ff;
+    --light-green: #e0f2f1;
+    --light-yellow: #fffde7;
+    --dark-text: #333;
+    --light-text: #fff;
+
+    /* Spacing */
+    --section-padding: 80px 0;
+}
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .pc-card-wrapper {
+            --pointer-x: 50%;
+            --pointer-y: 50%;
+            --background-x: 50%;
+            --background-y: 50%;
+            --pointer-from-center: 0;
+            --pointer-from-top: 0.5;
+            --pointer-from-left: 0.5;
+            --rotate-x: 0deg;
+            --rotate-y: 0deg;
+            --card-opacity: 0.8;
+            
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .pc-card-wrapper.active {
+            --card-opacity: 1;
+        }
+
+        .pc-card {
+            position: relative;
+            width: 420px;
+            height: 520px;
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: pointer;
+            transform: 
+                rotateX(var(--rotate-x)) 
+                rotateY(var(--rotate-y)) 
+                translateZ(20px);
+            transition: 
+                transform 0.1s ease-out,
+                box-shadow 0.3s ease;
+            background: 
+                var(--behind-gradient, 
+                    radial-gradient(farthest-side circle at var(--pointer-x) var(--pointer-y),
+                        hsla(266,100%,90%,var(--card-opacity)) 4%,
+                        hsla(266,50%,80%,calc(var(--card-opacity)*0.75)) 10%,
+                        hsla(266,25%,70%,calc(var(--card-opacity)*0.5)) 50%,
+                        hsla(266,0%,60%,0) 100%),
+                    radial-gradient(35% 52% at 55% 20%, var(--accent-glow) 0%, #073aff00 100%),
+                    radial-gradient(100% 100% at 50% 50%, #00c1ffff 1%, #073aff00 76%),
+                    conic-gradient(from 124deg at 50% 50%, #c137ffff 0%, #07c6ffff 40%, #07c6ffff 60%, #c137ffff 100%)
+                );
+            box-shadow: 
+                0 20px 40px var(--shadow-light),
+                0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .pc-card.active {
+            box-shadow: 
+                0 30px 60px var(--shadow-medium),
+                0 12px 24px var(--shadow-light),
+                0 0 0 1px var(--glass-border);
+        }
+
+        .pc-inside {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            background: linear-gradient(145deg, var(--card-bg) 0%, var(--card-bg-secondary) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .pc-shine {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(
+                    600px circle at var(--pointer-x) var(--pointer-y),
+                    rgba(255, 255, 255, 0.15) 0%,
+                    transparent 40%
+                );
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .pc-card.active .pc-shine {
+            opacity: 1;
+        }
+
+        .pc-glare {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(
+                    calc(var(--pointer-from-left) * 360deg),
+                    transparent 30%,
+                    rgba(255, 255, 255, 0.1) 50%,
+                    transparent 70%
+                );
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .pc-card.active .pc-glare {
+            opacity: calc(var(--pointer-from-center) * 0.5);
+        }
+
+        .pc-content {
+            position: relative;
+            padding: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .pc-avatar-content {
+            align-items: center;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 32px var(--shadow-light));
+            transition: all 0.3s ease;
+            margin-bottom: 32px;
+            /* Remove background and border for transparent PNGs */
+            background: transparent;
+            border: none;
+        }
+
+        .pc-card.active .avatar {
+            filter: drop-shadow(0 12px 48px var(--shadow-medium)) drop-shadow(0 0 20px var(--avatar-glow));
+            transform: translateZ(10px) scale(1.05);
+        }
+
+        .pc-user-info {
+            background: var(--glass-bg);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            margin-top: auto;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .pc-card.active .pc-user-info {
+            background: var(--glass-bg-hover);
+            transform: translateZ(8px);
+        }
+
+        .pc-user-details {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .pc-mini-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--glass-border);
+            flex-shrink: 0;
+        }
+
+        .pc-mini-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pc-user-text {
+            flex: 1;
+            text-align: left;
+            min-width: 0;
+        }
+
+        .pc-handle {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+
+        .pc-status {
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pc-contact-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px var(--avatar-glow);
+        }
+
+        .pc-contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--avatar-glow);
+        }
+
+        .pc-contact-btn:active {
+            transform: translateY(0);
+        }
+
+        .pc-details {
+            margin-top: auto;
+            text-align: center;
+        }
+
+        .pc-details h3 {
+            color: var(--text-primary);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 8px var(--shadow-light);
+        }
+
+        .pc-details p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        /* Grain texture overlay */
+        .pc-inside::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+            background-size: 20px 20px;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="pc-card-wrapper" id="cardWrapper">
+        <section class="pc-card" id="card">
+            <div class="pc-inside">
+                <div class="pc-shine"></div>
+                <div class="pc-glare"></div>
+                <div class="pc-content pc-avatar-content">
+                    <img
+                        class="avatar"
+                        src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f60e.svg"
+                        alt="User avatar"
+                        id="avatarImg"
+                    />
+                    <div class="pc-user-info">
+                        <div class="pc-user-details">
+                            <div class="pc-mini-avatar">
+                                <img
+                                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face"
+                                    alt="Mini avatar"
+                                    id="miniAvatarImg"
+                                />
+                            </div>
+                            <div class="pc-user-text">
+                                <div class="pc-handle">@joshua</div>
+                                <!-- <div class="pc-status">Online</div> -->
+                            </div>
+                        </div>
+                        <button class="pc-contact-btn" id="contactBtn">
+                            Contact
+                        </button>
+                    </div>
+                </div>
+                <div class="pc-content">
+                    <div class="pc-details">
+                        <h3>Javi A. Torres</h3>
+                        <p>Software Engineer</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        class ProfileCard {
+            constructor() {
+                this.cardWrapper = document.getElementById('cardWrapper');
+                this.card = document.getElementById('card');
+                this.contactBtn = document.getElementById('contactBtn');
+                
+                this.rafId = null;
+                this.isActive = false;
+                
+                this.config = {
+                    smoothDuration: 600,
+                    initialDuration: 1500,
+                    initialXOffset: 70,
+                    initialYOffset: 60
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.bindEvents();
+                this.startInitialAnimation();
+            }
+            
+            bindEvents() {
+                this.card.addEventListener('pointerenter', this.handlePointerEnter.bind(this));
+                this.card.addEventListener('pointermove', this.handlePointerMove.bind(this));
+                this.card.addEventListener('pointerleave', this.handlePointerLeave.bind(this));
+                this.contactBtn.addEventListener('click', this.handleContactClick.bind(this));
+            }
+            
+            clamp(value, min = 0, max = 100) {
+                return Math.min(Math.max(value, min), max);
+            }
+            
+            round(value, precision = 3) {
+                return parseFloat(value.toFixed(precision));
+            }
+            
+            adjust(value, fromMin, fromMax, toMin, toMax) {
+                return this.round(toMin + ((toMax - toMin) * (value - fromMin)) / (fromMax - fromMin));
+            }
+            
+            easeInOutCubic(x) {
+                return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+            }
+            
+            updateCardTransform(offsetX, offsetY) {
+                const rect = this.card.getBoundingClientRect();
+                const width = rect.width;
+                const height = rect.height;
+                
+                const percentX = this.clamp((100 / width) * offsetX);
+                const percentY = this.clamp((100 / height) * offsetY);
+                
+                const centerX = percentX - 50;
+                const centerY = percentY - 50;
+                
+                const properties = {
+                    '--pointer-x': `${percentX}%`,
+                    '--pointer-y': `${percentY}%`,
+                    '--background-x': `${this.adjust(percentX, 0, 100, 35, 65)}%`,
+                    '--background-y': `${this.adjust(percentY, 0, 100, 35, 65)}%`,
+                    '--pointer-from-center': `${this.clamp(Math.hypot(percentY - 50, percentX - 50) / 50, 0, 1)}`,
+                    '--pointer-from-top': `${percentY / 100}`,
+                    '--pointer-from-left': `${percentX / 100}`,
+                    '--rotate-x': `${this.round(-(centerX / 5))}deg`,
+                    '--rotate-y': `${this.round(centerY / 4)}deg`
+                };
+                
+                Object.entries(properties).forEach(([property, value]) => {
+                    this.cardWrapper.style.setProperty(property, value);
+                });
+            }
+            
+            createSmoothAnimation(duration, startX, startY) {
+                const startTime = performance.now();
+                const rect = this.cardWrapper.getBoundingClientRect();
+                const targetX = rect.width / 2;
+                const targetY = rect.height / 2;
+                
+                const animationLoop = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = this.clamp(elapsed / duration, 0, 1);
+                    const easedProgress = this.easeInOutCubic(progress);
+                    
+                    const currentX = this.adjust(easedProgress, 0, 1, startX, targetX);
+                    const currentY = this.adjust(easedProgress, 0, 1, startY, targetY);
+                    
+                    this.updateCardTransform(currentX, currentY);
+                    
+                    if (progress < 1) {
+                        this.rafId = requestAnimationFrame(animationLoop);
+                    }
+                };
+                
+                this.rafId = requestAnimationFrame(animationLoop);
+            }
+            
+            cancelAnimation() {
+                if (this.rafId) {
+                    cancelAnimationFrame(this.rafId);
+                    this.rafId = null;
+                }
+            }
+            
+            handlePointerEnter() {
+                this.cancelAnimation();
+                this.cardWrapper.classList.add('active');
+                this.card.classList.add('active');
+                this.isActive = true;
+            }
+            
+            handlePointerMove(event) {
+                if (!this.isActive) return;
+                
+                const rect = this.card.getBoundingClientRect();
+                this.updateCardTransform(
+                    event.clientX - rect.left,
+                    event.clientY - rect.top
+                );
+            }
+            
+            handlePointerLeave(event) {
+                const rect = this.card.getBoundingClientRect();
+                this.createSmoothAnimation(
+                    this.config.smoothDuration,
+                    event.clientX - rect.left,
+                    event.clientY - rect.top
+                );
+                
+                this.cardWrapper.classList.remove('active');
+                this.card.classList.remove('active');
+                this.isActive = false;
+            }
+            
+            handleContactClick() {
+                // Add your contact logic here
+                alert('Contact button clicked!');
+            }
+            
+            startInitialAnimation() {
+                const rect = this.cardWrapper.getBoundingClientRect();
+                const initialX = rect.width - this.config.initialXOffset;
+                const initialY = this.config.initialYOffset;
+                
+                this.updateCardTransform(initialX, initialY);
+                this.createSmoothAnimation(
+                    this.config.initialDuration,
+                    initialX,
+                    initialY
+                );
+            }
+        }
+        
+        // Initialize the profile card when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ProfileCard();
+        });
+    </script>
+</body>
+</html>
